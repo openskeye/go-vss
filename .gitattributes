@@ -5,6 +5,7 @@
 *.conf text eol=lf
 Dockerfile text eol=lf
 Makefile text eol=lf
+*.html linguist-language=go
 
 # 所有文本文件默认 LF
 * text=auto eol=lf
