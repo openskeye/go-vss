@@ -1,52 +1,24 @@
-# Skeyevss 项目流程与使用说明
+# go-vss
 
-本文档详细说明 Skeyevss（视频安全监控系统）的整体架构、服务流程、环境配置与使用方式。<br>
-
-
-**开发前准备**
-
-这是一个开发测试版本，如果需要完整版本请联系作者：
-
-- 1003275805@qq.com
-- 295222688@qq.com
-
-完整版本包含 `设备控制`、`预置位`、`录像`、`sms`等，功能更强大、更稳定，长期技术支持。
-
-- 开发环境
-  1. 后端代码使用`Go`语言开发，需要配置**go**语言开发环境 go版本 >= 1.23.10 [https://go.dev](https://go.dev)
-  2. 前端代码使用`React(18.2.0)` `Typescript`，需要配置`node`开发环境 [https://nodejs.org](https://nodejs.org/zh-cn)
-  3. 手机端App使用`Flutter`开发，dart版本 >= 3.10.7，flutter版本 >= 3.38.7 [https://docs.flutter.cn](https://docs.flutter.cn)
-
-- 服务依赖
-  1. **流媒体服务**：下载对应系统的流媒体二进制文件 [https://go.dev](https://go.dev)
-  2. **redis**：[https://redis.io](https://redis.io)
-  3. **etcd**：[https://github.com/etcd-io/etcd](https://github.com/etcd-io/etcd)
-  4. **mysql**：默认数据库为**sqlite**，如果需要使用`mysql`记得修改env配置 [https://www.mysql.com](https://www.mysql.com)
-
-- env配置（cp .env.default .env）
-  1. `SKEYEVSS_INTERNAL_IP=内网ip`，`SKEYEVSS_EXTERNAL_IP=公网ip`，请不要填写127.0.0.1，如果为正确配置视频流可能不会正常播放。
-  2. `SKEYEVSS_MYSQL_*` mysql配置如果需要
-  3. `SKEYEVSS_REDIS_*` redis
-  4. `SKEYEVSS_ETCD_*` etcd
-
-以上内容准备完毕后，进入 `core/app/sev/*`，首先启动 `core/app/sev/sev`，`core/app/sev/vss`，`core/app/sev/backend`，`core/app/sev/cron`<br>
-启动参数 `go run main -f 配置文件路径 -env 环境变量`，如果不指定参数将使用默认值 `-f etc/.xx.yaml -env .env.local`，详细请参考`core/app/sev/*/main.go`
-
----
-
+`go-vss` 是一款采用 **Go 语言** 开发的**高性能视频汇聚流媒体平台**，全面支持 **GB/T 28181、ONVIF、RTSP、RTMP、WebRTC** 等主流协议。平台专注于解决异构设备接入、多协议并发等行业痛点，实现海康、大华、宇视等品牌监控设备的**统一接入与管理**。
 
 ## 一、项目概述
 
-Skeyevss 是一套基于 **GB28181** 国标协议的视频安全监控平台，采用 Go 语言与 go-zero
-微服务框架，包含国标信令（SIP）、流媒体、管理后台、定时任务、数据服务等模块。
+本项目是一套基于**GB28181**国标协议的视频安全监控平台，采用Go语言与go-zero微服务框架，包含国标信令（SIP）、流媒体、管理后台、定时任务、数据服务等模块。
 
 ### 核心能力
 
 - **国标 GB28181**：设备注册、目录订阅、实时视频、回放、云台控制、语音对讲
-- **国标级联**：上下级平台级联（GBC）
+- **级联分发**：支持平台级联（如上级平台调度），视频流可转码为 RTSP/RTMP/FLV/HLS/WebRTC 格式全网分发（GBC）
+- **多协议设备兼容**：支持 GB/T 28181、RTSP、RTMP、ONVIF 等主流协议，兼容 95% 以上主流硬件设备
 - **流媒体**：对接媒体服务器（SkeyesMS），接收/拉取/转发 RTP 流
 - **管理后台**：设备、通道、用户、录像计划、系统配置等
-- **官网体系**：SK 后台（`sk/backend`）、SK 前台（`sk/frontend`），用于产品展示与发布管理
+- **全流程视频管理**：多分屏直播、支持云端录像与设备本地录像回放、云台控制、语音对讲
+- **智能分析**：集成烟火检测、区域入侵、口罩识别等算法，输出告警快照与可视化报表
+- **AI 算法融合**：插件化集成：以插件形式集成第三方 AI 服务（如客流统计、违停检测），用户按需安装算法插件，避免多平台配置碎片化
+- **开放生态与集成**：提供设备管理、直播控制等 API，JWT鉴权
+- **全链路工具链**：配套 APP（移动端推流）、SkeyeWEBPlayer.js（无插件 H5 播放器）等免费工具，覆盖采集到播放全流程
+- **灵活部署**：支持 Windows/Linux 系统、Docker 容器化部署，适配 X86/ARM 架构，覆盖本地服务器、私有云及边缘计算节点
 
 ---
 
@@ -380,7 +352,37 @@ skeyevss/
 
 ## 九、开发指南
 
-### 9.1 新增数据表与 Model
+### 9.1 开发前准备
+
+这是一个开发测试版本，如果需要完整版本请联系作者：
+
+- 1003275805@qq.com
+- 295222688@qq.com
+
+完整版本包含 `设备控制`、`预置位`、`录像`、`sms`等，功能更强大、更稳定，长期技术支持。
+
+- 开发环境
+    1. 后端代码使用`Go`语言开发，需要配置**go**语言开发环境 go版本 >= 1.23.10 [https://go.dev](https://go.dev)
+    2. 前端代码使用`React(18.2.0)` `Typescript`，需要配置`node`开发环境 [https://nodejs.org](https://nodejs.org/zh-cn)
+    3. 手机端App使用`Flutter`开发，dart版本 >= 3.10.7，flutter版本 >= 3.38.7 [https://docs.flutter.cn](https://docs.flutter.cn)
+
+- 服务依赖
+    1. **流媒体服务**：下载对应系统的流媒体二进制文件 [https://go.dev](https://go.dev)
+    2. **redis**：[https://redis.io](https://redis.io)
+    3. **etcd**：[https://github.com/etcd-io/etcd](https://github.com/etcd-io/etcd)
+    4. **mysql**：默认数据库为**sqlite**，如果需要使用`mysql`记得修改env配置 [https://www.mysql.com](https://www.mysql.com)
+
+- env配置（cp .env.default .env）
+    1. `SKEYEVSS_INTERNAL_IP=内网ip`，`SKEYEVSS_EXTERNAL_IP=公网ip`，请不要填写127.0.0.1，如果为正确配置视频流可能不会正常播放。
+    2. `SKEYEVSS_MYSQL_*` mysql配置如果需要
+    3. `SKEYEVSS_REDIS_*` redis
+    4. `SKEYEVSS_ETCD_*` etcd
+
+以上内容准备完毕后，进入 `core/app/sev/*`，首先启动 `core/app/sev/sev`，`core/app/sev/vss`，`core/app/sev/backend`，`core/app/sev/cron`<br>
+启动参数 `go run main -f 配置文件路径 -env 环境变量`，如果不指定参数将使用默认值 `-f etc/.xx.yaml -env .env.local`，详细请参考`core/app/sev/*/main.go`
+
+
+### 9.2 新增数据表与 Model
 
 1. 在 `templates/sql/` 下新增 `表名.sql`（建表语句）。
 2. 在 `scripts/dev/` 下执行 `sev-db.sh`（需先改脚本内 `name` 为表名），会生成：
@@ -388,19 +390,19 @@ skeyevss/
     - `variables.go`、`data.go`、`db.go`
 3. 按需在 `data.go` 中补全转换逻辑，在 `db.go` 中补全查询封装。
 
-### 9.2 新增/修改 Backend API
+### 9.3 新增/修改 Backend API
 
 1. 修改 `templates/apis/backend-api.api`（或对应 .api 文件）。
 2. 在 `scripts/dev` 下执行 `sev-api.sh`（注意脚本内 `server_name`、`use_orm_params`），会生成/覆盖 handler、logic，配置文件会放到
    `etc/.backend-api.yaml` 等。
 3. 若使用自定义模板，脚本会替换 `api-handler.tpl`、`api-logic.tpl` 等（见 sev-api.sh）。
 
-### 9.3 修改 DB RPC
+### 9.4 修改 DB RPC
 
 1. 修改 `core/app/sev/db/*.proto`。
 2. 在 `scripts/dev` 下执行 `sev-rpc.sh`，会生成 gRPC 与 zrpc 代码，配置移动到 `etc/.db-rpc.yaml`。
 
-### 9.4 配置说明
+### 9.5 配置说明
 
 - 所有 `etc/.xxx.yaml` 中大量使用环境变量占位符，例如 `Mode: "${SKEYEVSS_SERVER_ENV_MODE}"`、
   `Port: ${SKEYEVSS_BACKEND_API_PORT}`。
