@@ -379,7 +379,7 @@ skeyevss/
     4. `SKEYEVSS_ETCD_*` etcd
 
 以上内容准备完毕后，进入 `core/app/sev/*`，首先启动 `core/app/sev/sev`，`core/app/sev/vss`，`core/app/sev/backend`，`core/app/sev/cron`<br>
-启动参数 `go run main -f 配置文件路径 -env 环境变量`，如果不指定参数将使用默认值 `-f etc/.xx.yaml -env .env.local`，详细请参考`core/app/sev/*/main.go`
+启动参数 `go run main.go -f 配置文件路径 -env 环境变量`，如果不指定参数将使用默认值 `-f etc/.xx.yaml -env .env.local`，详细请参考`core/app/sev/*/main.go`
 
 
 ### 9.2 新增数据表与 Model
