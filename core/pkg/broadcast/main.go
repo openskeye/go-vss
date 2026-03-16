@@ -31,7 +31,6 @@ func (cm *BroadcastManager) Send(channelName string, data interface{}) bool {
 	// 检查channel是否存在
 	actual, exists := cm.channels.Load(channelName)
 	if !exists {
-		// fmt.Printf("❌ 没有接收者，丢弃数据: %s -> %v\n", channelName, data)
 		return false
 	}
 
@@ -40,11 +39,9 @@ func (cm *BroadcastManager) Send(channelName string, data interface{}) bool {
 
 	select {
 	case info.ch <- data:
-		// fmt.Printf("✅ 发送到 %s: %v (使用次数: %d)\n", channelName, data, info.usage)
 		return true
 	default:
 		// channel已满，丢弃数据
-		// fmt.Printf("❌ %s 已满，丢弃数据: %v\n", channelName, data)
 		return false
 	}
 }
@@ -63,7 +60,6 @@ func (cm *BroadcastManager) RegisterReceiver(channelName string) <-chan interfac
 		return actual.(*channelInfo).ch
 	}
 
-	// fmt.Printf("🆕 创建channel: %s (容量: %d)\n", channelName, cm.maxCapacity)
 	return info.ch
 }
 
@@ -76,23 +72,20 @@ func (cm *BroadcastManager) UnregisterReceiver(channelName string) {
 
 		// 清理channel中剩余的数据
 		go cm.cleanupChannel(info.ch, channelName)
-		// fmt.Printf("🗑️  关闭channel: %s (总使用次数: %d)\n", channelName, info.usage)
 	}
 }
 
 // 清理channel中剩余的数据
 func (cm *BroadcastManager) cleanupChannel(ch <-chan interface{}, channelName string) {
-	dropped := 0
+	var dropped = 0
 	for {
 		select {
 		case _, ok := <-ch:
 			if !ok {
-				// fmt.Printf("🧹 清理完成: %s (丢弃 %d 条数据)\n", channelName, dropped)
 				return
 			}
 			dropped++
 		default:
-			// fmt.Printf("🧹 清理完成: %s (丢弃 %d 条数据)\n", channelName, dropped)
 			return
 		}
 	}
@@ -112,7 +105,6 @@ func (cm *BroadcastManager) StartCleanupWorker(interval time.Duration, maxIdle t
 					info        = value.(*channelInfo)
 				)
 				if now.Sub(info.createdAt) > maxIdle && info.usage == 0 {
-					// fmt.Printf("⏰ 自动清理空闲channel: %s\n", channelName)
 					cm.UnregisterReceiver(channelName)
 				}
 				return true
