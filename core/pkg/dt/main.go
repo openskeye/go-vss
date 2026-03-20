@@ -20,4 +20,5 @@ type throttledType struct {
 
 func init() {
 	go debounceRunner()
+	go throttleFixedGridIdleRunner()
 }

@@ -30,6 +30,27 @@ func TestThrottleFixedGridTrailing_ScaledThreeSlots(t *testing.T) {
 	}
 }
 
+func TestThrottleFixedGridTrailing_RemovesIdleFromMap(t *testing.T) {
+	var (
+		key = "cleanup-idle-key"
+		n   int32
+	)
+
+	ThrottleFixedGridTrailing(key, 40*time.Millisecond, func() {
+		atomic.AddInt32(&n, 1)
+	})
+
+	time.Sleep(120 * time.Millisecond)
+
+	if throttleFixedGridMaps.Has(key) {
+		t.Fatal("期望槽尾执行完毕后空闲条目已从 throttleFixedGridMaps 移除")
+	}
+
+	if atomic.LoadInt32(&n) != 1 {
+		t.Fatalf("期望回调执行 1 次，实际 %d", n)
+	}
+}
+
 func TestThrottleFixedGridTrailing_LastInSlotWins(t *testing.T) {
 	var (
 		period = 80 * time.Millisecond
